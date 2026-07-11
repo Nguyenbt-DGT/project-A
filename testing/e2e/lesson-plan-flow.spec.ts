@@ -52,7 +52,7 @@ test("uploaded picture is embedded in the generated plan", async ({ page }) => {
 
   const preview = page.frameLocator('iframe[title="Lesson plan preview"]')
   await expect(preview.locator("img.lesson-image")).toHaveCount(1)
-  await expect(preview.locator("img.lesson-image")).toHaveAttribute("src", /\/uploads\//)
+  await expect(preview.locator("img.lesson-image")).toHaveAttribute("src", /\/storage\/v1\/object\/public\//)
 })
 
 test("omits the video resources section when no links are given", async ({ page }) => {

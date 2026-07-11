@@ -10,7 +10,12 @@ Implements the Express backend: data model, AI generation service, and REST API 
 
 ## Tech Stack
 - TypeScript, Express, Prisma
-- PostgreSQL (locally installed, or any reachable instance) via `DATABASE_URL`
+- PostgreSQL: Supabase-hosted, via `DATABASE_URL` (pooled) / `DIRECT_URL` (direct, used by Prisma migrations)
+- File storage: Supabase Storage (public bucket `lesson-plan-images`), via `SUPABASE_URL` +
+  `SUPABASE_SERVICE_ROLE_KEY` (server-side only, never exposed to the frontend). `POST /api/uploads`
+  streams the multipart file straight to the bucket (`multer` memory storage, no local disk write —
+  required for stateless hosting on Render, where the filesystem is ephemeral) and returns the
+  bucket's public URL.
 - AI provider abstraction (`AI_IMPLEMENTATION.md`), default OpenAI
 
 ## Project Structure
@@ -60,7 +65,7 @@ backend/
   "activity_duration_min": 10,
   "total_lesson_time_min": 30,
   "video_links": ["https://youtube.com/..."],
-  "image_url": "https://.../uploads/xyz.png"
+  "image_url": "https://<project>.supabase.co/storage/v1/object/public/lesson-plan-images/xyz.png"
 }
 ```
   → `201` response:

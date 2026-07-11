@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto"
-import { mkdirSync, writeFileSync } from "node:fs"
-import path from "node:path"
+import { createClient } from "@supabase/supabase-js"
 import { Router, type Request, type Response } from "express"
 import multer from "multer"
 
@@ -12,14 +11,22 @@ const EXTENSION_BY_CONTENT_TYPE: Record<string, string> = {
   "image/webp": ".webp",
 }
 
-export const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR ?? "uploads")
-mkdirSync(UPLOAD_DIR, { recursive: true })
+const STORAGE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET ?? "lesson-plan-images"
+
+function supabase() {
+  const url = process.env.SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) {
+    throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured")
+  }
+  return createClient(url, key)
+}
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_UPLOAD_BYTES + 1 } })
 
 export const uploadsRouter = Router()
 
-uploadsRouter.post("/api/uploads", upload.single("file"), (req: Request, res: Response) => {
+uploadsRouter.post("/api/uploads", upload.single("file"), async (req: Request, res: Response) => {
   const file = req.file
   if (!file) {
     return res.status(422).json({ detail: "Only PNG, JPEG or WEBP images are allowed" })
@@ -32,9 +39,14 @@ uploadsRouter.post("/api/uploads", upload.single("file"), (req: Request, res: Re
   }
 
   const filename = `${randomUUID()}${EXTENSION_BY_CONTENT_TYPE[file.mimetype]}`
-  const destination = path.join(UPLOAD_DIR, filename)
-  writeFileSync(destination, file.buffer)
+  const { error } = await supabase()
+    .storage.from(STORAGE_BUCKET)
+    .upload(filename, file.buffer, { contentType: file.mimetype })
+  if (error) {
+    console.error("Supabase Storage upload failed:", error.message)
+    return res.status(502).json({ detail: "Image upload failed, please retry" })
+  }
 
-  const baseUrl = `${req.protocol}://${req.get("host")}`
-  return res.status(201).json({ url: `${baseUrl}/uploads/${filename}` })
+  const { data } = supabase().storage.from(STORAGE_BUCKET).getPublicUrl(filename)
+  return res.status(201).json({ url: data.publicUrl })
 })

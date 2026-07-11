@@ -90,6 +90,9 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/lesson_plan_builder
           DIRECT_URL: postgresql://postgres:postgres@localhost:5432/lesson_plan_builder
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_STORAGE_BUCKET: lesson-plan-images
           AI_PROVIDER: mock
           CORS_ORIGINS: http://localhost:5173
           PORT: 8000

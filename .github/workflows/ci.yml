@@ -78,6 +78,7 @@ jobs:
         run: npx prisma db push
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/lesson_plan_builder
+          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/lesson_plan_builder
 
       - name: Build and start backend, wait for health
         working-directory: backend
@@ -88,6 +89,7 @@ jobs:
           timeout 30 bash -c 'until curl -sf http://localhost:8000/health; do sleep 1; done'
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/lesson_plan_builder
+          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/lesson_plan_builder
           AI_PROVIDER: mock
           CORS_ORIGINS: http://localhost:5173
           PORT: 8000

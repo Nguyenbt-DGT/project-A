@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,500;0,6..12,600;0,6..12,700;1,6..12,400&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Nunito Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Fredoka', ui-sans-serif, system-ui, sans-serif;
+
+  --color-linen: #EDEAE0;
+  --color-linen-light: #F7F5EF;
+  --color-pine: #1B4D3E;
+  --color-pine-light: #2E6B57;
+  --color-salmon: #F88379;
+  --color-salmon-dark: #E56B60;
+  --color-goldenrod: #DAA520;
+  --color-goldenrod-light: #F0D48A;
+}
+
+@theme inline {
+  --color-background: var(--color-linen);
+  --color-foreground: var(--color-pine);
+
+  --color-card: #FFFFFF;
+  --color-card-foreground: var(--color-pine);
+
+  --color-primary: var(--color-salmon);
+  --color-primary-foreground: #FFFFFF;
+
+  --color-secondary: var(--color-pine);
+  --color-secondary-foreground: #FFFFFF;
+
+  --color-accent: var(--color-goldenrod);
+  --color-accent-foreground: var(--color-pine);
+
+  --color-muted: var(--color-linen-light);
+  --color-muted-foreground: #5C6F68;
+
+  --color-destructive: #C0392B;
+  --color-destructive-foreground: #FFFFFF;
+
+  --color-border: #DCD6C6;
+  --color-input: #DCD6C6;
+  --color-ring: var(--color-salmon);
+
+  --radius: 0.75rem;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    margin: 0;
+  }
+}
+
+@utility font-heading {
+  font-family: var(--font-heading);
+}
+
+@utility bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+}

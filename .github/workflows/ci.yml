@@ -1,0 +1,132 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm test
+        env:
+          AI_PROVIDER: mock
+      - run: npm run build
+
+  frontend-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: lesson_plan_builder
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend deps
+        working-directory: backend
+        run: npm ci
+
+      - name: Apply database schema
+        working-directory: backend
+        run: npx prisma db push
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/lesson_plan_builder
+
+      - name: Build and start backend, wait for health
+        working-directory: backend
+        run: |
+          npm run build
+          nohup node dist/server.js > backend.log 2>&1 &
+          disown
+          timeout 30 bash -c 'until curl -sf http://localhost:8000/health; do sleep 1; done'
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/lesson_plan_builder
+          AI_PROVIDER: mock
+          CORS_ORIGINS: http://localhost:5173
+          PORT: 8000
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci
+
+      - name: Start frontend and wait for it to serve
+        working-directory: frontend
+        run: |
+          nohup npm run dev -- --port 5173 > frontend.log 2>&1 &
+          disown
+          timeout 30 bash -c 'until curl -sf http://localhost:5173 >/dev/null; do sleep 1; done'
+        env:
+          VITE_API_BASE_URL: http://localhost:8000
+
+      - name: Install Playwright
+        working-directory: testing/e2e
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+
+      - name: Run e2e tests
+        working-directory: testing/e2e
+        run: npm test
+        env:
+          E2E_BASE_URL: http://localhost:5173
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: testing/e2e/playwright-report
+          retention-days: 7

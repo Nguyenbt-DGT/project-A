@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model LessonPlan {
+  id                    String   @id @default(uuid())
+  ageFrom               Int      @map("age_from")
+  ageTo                 Int      @map("age_to")
+  concept               String
+  numActivities         Int      @map("num_activities")
+  activityDurationMin   Int      @map("activity_duration_min")
+  totalLessonTimeMin    Int?     @map("total_lesson_time_min")
+  videoLinks            Json     @default("[]") @map("video_links")
+  imageUrl              String?  @map("image_url")
+  generatedHtml         String   @map("generated_html")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  @@map("lesson_plans")
+}

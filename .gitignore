@@ -1,0 +1,8 @@
+.env
+.env.local
+
+testing/e2e/node_modules/
+testing/e2e/playwright-report/
+testing/e2e/test-results/
+
+.DS_Store

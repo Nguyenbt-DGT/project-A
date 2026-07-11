@@ -83,3 +83,20 @@ Errors: `422` validation (field-level messages matching BA spec ranges), `502` o
 ## Hand-off
 Produces: running backend + this published API contract.
 Hands off to: **Dev Front End Agent**, which consumes these exact endpoints/shapes. Once FE integration is complete, control passes to **QA Agent**.
+
+## Production Deployment
+
+- **Backend**: Render web service `lesson-plan-builder-api`, deployed from this repo's `backend/`
+  root dir (see `render.yaml`). Live at `https://lesson-plan-builder-api-qtro.onrender.com`.
+- **Frontend**: Vercel project `lesson-plan-builder`, deployed from `frontend/`. Live at
+  `https://lesson-plan-builder-one.vercel.app`.
+- **Database**: Supabase Postgres. Render's outbound network is **IPv4-only**, and Supabase's direct
+  connection host (`db.<ref>.supabase.co`) is **IPv6-only** — connecting the two directly fails with
+  `Can't reach database server`. Both `DATABASE_URL` (transaction pooler, port 6543,
+  `?pgbouncer=true`) and `DIRECT_URL` (session pooler, port 5432) must use the Supavisor pooler host
+  (`aws-<n>-<region>.pooler.supabase.com`, username `postgres.<project-ref>`) instead of the direct
+  host. This only bites on IPv4-only hosts (Render, some CI runners) — local dev machines with IPv6
+  connectivity won't see it.
+- CI's `e2e` job (`.github/workflows/ci.yml`) uses a disposable Postgres service container, not
+  Supabase, so it's unaffected by the pooler requirement — but it does need `SUPABASE_URL` /
+  `SUPABASE_SERVICE_ROLE_KEY` repo secrets for the image-upload test.

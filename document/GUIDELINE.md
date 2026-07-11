@@ -10,8 +10,7 @@ No account, no login, no setup required.
 ## Step 1 — Open the app
 
 - Open your web browser (Chrome, Edge, Safari, or Firefox).
-- Go to the app's web address (the link given to you by your school or
-  administrator).
+- Go to <https://lesson-plan-builder-one.vercel.app>.
 - The homepage loads with an empty form — you're ready to start.
 
 ## Step 2 — Fill in your class details
